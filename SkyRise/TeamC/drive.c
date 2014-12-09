@@ -15,6 +15,7 @@ void setR(int speed)
 
 void setL(int speed)
 {
+
 	motor[left1] = motor[left2] = speed * L_FACTOR;
 }
 
