@@ -22,10 +22,10 @@ void setL(int speed)
 task main()
 {
 
-while (1)
-{
-	setL(vexRT[Ch3]);
-	setR(vexRT[Ch2]);
-}
+	while (1)
+	{
+		setL(vexRT[Ch3]);
+		setR(vexRT[Ch2]);
+	}
 
 }
