@@ -50,69 +50,102 @@ void clawControl(int speed, bool open)
 	motor[claw] = speed * (open?1:-1);
 }
 
-//
+//Control the tilt of the claw
 void clawTiltControl(int speed, bool up)
 {
+	//Sets the claw motor to speed multiplied by direction depending
+	//on the values of the up boolean
 	motor[clawTilt] = speed * (up?1:-1);
 }
 
+//Main
 task main()
 {
-
+  //Do until the program ends
 	while(1)
 	{
+		//Set the right motor to the speed of the channel 2 input
 		setR(vexRT[Ch2]);
+		//Set the left motor to the speed of the channel 3 input
 		setL(vexRT[Ch3]);
 
+		//If the top button on the right side of the top of the controller is pressed
+		//and the bottom button there is not pressed
 		if(vexRT[Btn6U] && !vexRT[Btn6D])
 		{
+			//run the lift motors downward at a speed of 127
 			lift(127, false);
 		}
+		//Opposite of previous if
 		else if(vexRT[Btn6D] && !vexRT[Btn6U])
 		{
+			//run the lift motors upward at a speed of 127
 			lift(127, true);
 		}
+		//If none of those are true
 		else
 		{
+			//don't run the motors
 			lift(0);
 		}
 
+		//If the top button on the left side of the top of the controller is pressed
+		//and the bottom button there is not pressed
 		if(vexRT[Btn5U] && !vexRT[Btn5D])
 		{
+			//Run secondary lift motors at a speed of 127 downwards
 			liftSec(127, false);
 		}
+		//Opposite of previous if
 		else if(vexRT[Btn5D] && !vexRT[Btn5U])
 		{
+			//Run secondary lift motors at a speed of 127 upwards
 			liftSec(127, true);
 		}
+		//If none of those are true
 		else
 		{
+			//Run the secondary lift motors at a speed of 10
 			liftSec(10);
 		}
 
+		//If the left button on the left button pad is down
+		//and the right button is not
 		if(vexRT[Btn7L] && !vexRT[Btn7R])
 		{
+			//Open the claw motors at a speed of 64
 			clawControl(64, true);
 		}
+		//Opposite of previous if
 		else if(vexRT[Btn7R] && !vexRT[Btn7L])
 		{
+			//Close the claw motors at a speed of 64
 			clawControl(64, false);
 		}
+		//If neither of those two
 		else
 		{
+			//Close the claw motors at a speed of 5
 			clawControl(5, false);
 		}
 
+		//If the up button on the left button pad is down
+		//and the bown button is not
 		if(vexRT[Btn7U] && !vexRT[Btn7D])
 		{
+			//Tilt the claw up at a speed of 32
 			clawTiltControl(32, true);
 		}
+		//Opposite of previous if
 		else if(vexRT[Btn7D] && !vexRT[Btn7U])
 		{
+			//Tilt the claw down at a speed of 32
 			clawTiltControl(32, false);
 		}
+		//If none of those are done
 		else
 		{
+			//Tilt the claw up at a speed of 5
 			clawTiltControl(5, true);
 		}
 
