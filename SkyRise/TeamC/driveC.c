@@ -43,6 +43,10 @@ task main()
 		{
 			lift(-LIFT_SPEED);
 		}
+		else
+		{
+			lift(15);
+		}
 	}
 
 }
