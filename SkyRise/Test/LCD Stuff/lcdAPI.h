@@ -54,7 +54,7 @@ void lcdPrintRight(short line, char* str)
 	displayLCDString(line, 16-strlen(str), str);
 }
 
-void lcdPrintSpecial(char* input)
+void lcd_printf(char* input)
 {
 	char strArr[50];
 	char* str = &strArr;
@@ -65,23 +65,23 @@ void lcdPrintSpecial(char* input)
 	char* line2Ptr=&line2;
 	memset(line1Ptr,0,50);
 	memset(line2Ptr,0,50);
-	strtok(str,line1Ptr,"~");
-	strtok(str,line2Ptr,"~");
+	strtok(str,line1Ptr,"\n");
+	strtok(str,line2Ptr,"\n");
 	char str1[50];
 	char* str1Ptr=&str1;
 	char str2[50];
 	char* str2Ptr=&str2;
 	char str3[50];
 	char* str3Ptr=&str3;
-	strtok(line1Ptr,str1Ptr,"`");
-	strtok(line1Ptr,str2Ptr,"`");
-	strtok(line1Ptr,str3Ptr,"`");
+	strtok(line1Ptr,str1Ptr,"\t");
+	strtok(line1Ptr,str2Ptr,"\t");
+	strtok(line1Ptr,str3Ptr,"\t");
 	lcdPrintLeft(0, str1Ptr);
 	displayLCDCenteredString(0, str2Ptr);
 	lcdPrintRight(0, str3Ptr);
-	strtok(line2Ptr,str1Ptr,"`");
-	strtok(line2Ptr,str2Ptr,"`");
-	strtok(line2Ptr,str3Ptr,"`");
+	strtok(line2Ptr,str1Ptr,"\t");
+	strtok(line2Ptr,str2Ptr,"\t");
+	strtok(line2Ptr,str3Ptr,"\t");
 	displayLCDCenteredString(1, str2Ptr);
 	lcdPrintRight(1, str3Ptr);
 	lcdPrintLeft(1, str1Ptr);

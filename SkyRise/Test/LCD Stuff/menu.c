@@ -39,7 +39,7 @@ task main()
   {
   	lcdClear();
   	lcdWaitForBtnUp();
-  	lcdPrintSpecial("`Choice 1~BLU`Diag`RED");
+  	lcd_printf("\tChoice 1\nBLU\tDiag\tRED");
 		lcdWaitForBtnDown();
   	if (lcdIsBtnDown(leftButton))
   	{
@@ -57,7 +57,7 @@ task main()
 
   	lcdClear();
   	lcdWaitForBtnUp();
-		lcdPrintSpecial("`Choice 2~1`Back`2");
+		lcd_printf("\tChoice 2\n1\tBack\t2");
 		lcdWaitForBtnDown();
     // Display menu 2
   	if (lcdIsBtnDown(leftButton))
