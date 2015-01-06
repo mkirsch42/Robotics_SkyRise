@@ -24,98 +24,9 @@
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 #include "lcdAPI.h"
+#include "diag.h"
+#include "driveAPI.h"
 
-const int CLAW_OPEN = 140;
-const int LIFT_HIGH = 3050;
-const int LIFT_LOW = 5;
-const int LIFT_SPEED = 96;
-const bool UP = 1;
-const bool DOWN = 0;
-const double IME_S_TICKS = 392;
-const double IME_T_TICKS = 627.2;
-void setR(int speed)
-{
-	motor[right1] = motor[right2] = speed;
-}
-
-void setL(int speed)
-{
-	motor[left1] = motor[left2] = speed;
-}
-
-void lift(int speed, bool up = true)
-{
-	motor[lift1] = motor[lift2] = motor[lift3] = motor[lift4] = speed * (up?1:-1);
-}
-
-void lift(bool dir)
-{
-	if (dir)
-	{
-		while (SensorValue[ime_lift] <= LIFT_HIGH)
-		{
-			motor[lift1] = motor[lift2] = motor[lift3] = motor[lift4] = LIFT_SPEED;
-		}
-		motor[lift1] = motor[lift2] = motor[lift3] = motor[lift4] = 3;
-		return;
-		//SensorValue[ime_lift] = LIFT_HIGH;
-	}
-	else
-	{
-		while (SensorValue[ime_lift] >= LIFT_LOW)
-		{
-			motor[lift1] = motor[lift2] = motor[lift3] = motor[lift4] = -LIFT_SPEED;
-		}
-		motor[lift1] = motor[lift2] = motor[lift3] = motor[lift4] = 3;
-		SensorValue[ime_lift] = 0;
-		return;
-	}
-
-}
-
-void clawControl(int speed)
-{
-	motor[claw] = speed;
-}
-
-int getEncoder()
-{
-	return (nMotorEncoder[right2]+nMotorEncoder[left2])/2;
-}
-
-void fwd(int inches)
-{
-	nMotorEncoder[right2] = nMotorEncoder[left2] = 0;
-	setL(127);
-	setR(127);
-	while(getEncoder()<(inches / (4*3.14))*IME_S_TICKS){}
-	setL(0);
-	setR(0);
-}
-
-void diag()
-{
-string mainBattery, backupBattery;
-while(nLCDButtons!=0){}
-while(nLCDButtons!=2)                                       // An infinite loop to keep the program running until you terminate it
-{
-clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
-clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
-
-//Display the Primary Robot battery voltage
-displayLCDString(0, 0, "Primary: ");
-sprintf(mainBattery, "%1.2f%c", nImmediateBatteryLevel/1000.0,'V'); //Build the value to be displayed
-displayNextLCDString(mainBattery);
-
-//Display the Backup battery voltage
-displayLCDString(1, 0, "Backup: ");
-sprintf(backupBattery, "%1.2f%c", BackupBatteryLevel/1000.0, 'V');    //Build the value to be displayed
-displayNextLCDString(backupBattery);
-
-//Short delay for the LCD refresh rate
-wait1Msec(100);
-}
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -141,57 +52,71 @@ void pre_auton()
   int choice1;
   int choice2;
   bLCDBacklight = true;
-  bool inMenu = true;
- 	while(inMenu)
+ 	while(1)
   {
   	lcdClear();
-  	lcdWaitForBtnUp();
-  	lcd_printf("\tChoice 1\nBLU\tDiag\tRED");
-		lcdWaitForBtnDown();
-  	if (lcdIsBtnDown(leftButton))
+  	char* c = "\tChoice 1\nBLU\tDiag\tRED";
+  	lcd_printf(c);
+		int code = lcdWaitForBtnClick();
+  	if (code==leftButton)
   	{
   		choice1=0;
   	}
-  	if (lcdIsBtnDown(rightButton))
+  	if (code==rightButton)
   	{
   		choice1=1;
   	}
-  	if (lcdIsBtnDown(centerButton))
+  	if (code==centerButton)
   	{
   		diag();
+  		lcdClear();
+  		c="\tChoice 1\nBLU\tDiag\tRED";
   		continue;
   	}
 
   	lcdClear();
-  	lcdWaitForBtnUp();
 		lcd_printf("\tChoice 2\nAuto\tBack\tPole");
-		lcdWaitForBtnDown();
+		code = lcdWaitForBtnClick();
     // Display menu 2
-  	if (lcdIsBtnDown(leftButton))
+  	if (code==leftButton)
   	{
   		choice2=0;
   	}
-  	if (lcdIsBtnDown(rightButton))
+  	if (code==rightButton)
   	{
   		choice2=2;
   	}
-  	if (lcdIsBtnDown(centerButton))
+  	if (code==centerButton)
   	{
   		continue;
   	}
-	int temp = choice1 + choice2;
+	Program = choice1 + choice2;
+	bool stillWaiting=true;
+	while(stillWaiting)
+	{
 	lcdClear();
-	char* disp = (temp==0?"BLU Auto":temp==1?"RED Auto":temp==2?"BLU Pole":"RED Pole");
-	lcd_printf("\nBack\tOK\tBack");
-	clearLCDLine(0);
-	displayLCDCenteredString(0,disp);
-	lcdWaitForBtnUp();
-	lcdWaitForBtnDown();
-	if(lcdIsBtnDown(rightButton)||lcdIsBtnDown(leftButton))
-		continue;
-	Program = temp;
-	inMenu=false;
+	switch (Program)
+	{
+		case 0:
+			lcd_printf("\tBLU Auto\nBack\tDiag\tBack");
+			break;
+		case 1:
+			lcd_printf("\tRED Auto\nBack\tDiag\tBack");
+			break;
+		case 2:
+			lcd_printf("\tBLU Pole\nBack\tDiag\tBack");
+			break;
+		case 3:
+			lcd_printf("\tRED Pole\nBack\tDiag\tBack");
+			break;
 	}
+	code = lcdWaitForBtnClick();
+	if(code==centerButton)
+		diag();
+	else
+		stillWaiting=false;
+	}
+}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -209,10 +134,9 @@ task autonomous()
   // Insert user code here.
   // .....................................................................................
 lcdClear();
-char* disp = "\t";
-disp += (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
-disp += "Running";
-lcd_printf(disp);
+char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
+displayLCDCenteredString(0, disp);
+displayLCDCenteredString(1,"Running");
 setL(-127);
 	setR(-127);
 	wait1Msec(750);

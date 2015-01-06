@@ -103,6 +103,15 @@ void lcdWaitForBtnDown()
 	while(nLCDButtons==0){}
 }
 
+int lcdWaitForBtnClick()
+{
+	lcdWaitForBtnUp();
+	lcdWaitForBtnDown();
+	int ret = nLCDButtons;
+	lcdWaitForBtnUp();
+	return ret;
+}
+
 bool lcdIsBtnDown(short btnCode)
 {
 	return nLCDButtons&btnCode;
