@@ -23,6 +23,7 @@
 #pragma userControlDuration(120)
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
+#include "lcdAPI.h"
 
 const int CLAW_OPEN = 140;
 const int LIFT_HIGH = 3050;
@@ -92,6 +93,30 @@ void fwd(int inches)
 	setR(0);
 }
 
+void diag()
+{
+string mainBattery, backupBattery;
+while(nLCDButtons!=0){}
+while(nLCDButtons!=2)                                       // An infinite loop to keep the program running until you terminate it
+{
+clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
+clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
+
+//Display the Primary Robot battery voltage
+displayLCDString(0, 0, "Primary: ");
+sprintf(mainBattery, "%1.2f%c", nImmediateBatteryLevel/1000.0,'V'); //Build the value to be displayed
+displayNextLCDString(mainBattery);
+
+//Display the Backup battery voltage
+displayLCDString(1, 0, "Backup: ");
+sprintf(backupBattery, "%1.2f%c", BackupBatteryLevel/1000.0, 'V');    //Build the value to be displayed
+displayNextLCDString(backupBattery);
+
+//Short delay for the LCD refresh rate
+wait1Msec(100);
+}
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //                          Pre-Autonomous Functions
@@ -100,7 +125,7 @@ void fwd(int inches)
 // following function.
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-
+int Program;
 void pre_auton()
 {
   // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
@@ -109,6 +134,64 @@ void pre_auton()
 
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
+
+  short leftButton = 1;
+	short centerButton = 2;
+	short rightButton = 4;
+  int choice1;
+  int choice2;
+  bLCDBacklight = true;
+  bool inMenu = true;
+ 	while(inMenu)
+  {
+  	lcdClear();
+  	lcdWaitForBtnUp();
+  	lcd_printf("\tChoice 1\nBLU\tDiag\tRED");
+		lcdWaitForBtnDown();
+  	if (lcdIsBtnDown(leftButton))
+  	{
+  		choice1=0;
+  	}
+  	if (lcdIsBtnDown(rightButton))
+  	{
+  		choice1=1;
+  	}
+  	if (lcdIsBtnDown(centerButton))
+  	{
+  		diag();
+  		continue;
+  	}
+
+  	lcdClear();
+  	lcdWaitForBtnUp();
+		lcd_printf("\tChoice 2\nAuto\tBack\tPole");
+		lcdWaitForBtnDown();
+    // Display menu 2
+  	if (lcdIsBtnDown(leftButton))
+  	{
+  		choice2=0;
+  	}
+  	if (lcdIsBtnDown(rightButton))
+  	{
+  		choice2=2;
+  	}
+  	if (lcdIsBtnDown(centerButton))
+  	{
+  		continue;
+  	}
+	int temp = choice1 + choice2;
+	lcdClear();
+	char* disp = (temp==0?"BLU Auto":temp==1?"RED Auto":temp==2?"BLU Pole":"RED Pole");
+	lcd_printf("\nBack\tOK\tBack");
+	clearLCDLine(0);
+	displayLCDCenteredString(0,disp);
+	lcdWaitForBtnUp();
+	lcdWaitForBtnDown();
+	if(lcdIsBtnDown(rightButton)||lcdIsBtnDown(leftButton))
+		continue;
+	Program = temp;
+	inMenu=false;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +208,11 @@ task autonomous()
   // .....................................................................................
   // Insert user code here.
   // .....................................................................................
+lcdClear();
+char* disp = "\t";
+disp += (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
+disp += "Running";
+lcd_printf(disp);
 setL(-127);
 	setR(-127);
 	wait1Msec(750);
@@ -136,31 +224,6 @@ clawControl(80);
 
 	wait1Msec(1000);
 	clawControl(0);
-
-	/*wait1Msec(100);
-	clawControl(80);
-	wait1Msec(875);
-	clawControl(0);*/
-	/*if(SensorValue[turnSel])
-	{
-		setR(64);
-	}
-	else
-	{
-		setL(64);
-	}
-	waitMSec(500);
-	setL(0);
-	setR(0);
-	lift(64,false);
-	setL(-64);
-	setR(-64);
-	wait1MSec(500);
-	setR(0);
-	setL(0);
-	lift(64,false);
-	wait1MSec(3000);
-	lift(0);*/
 	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
 }
 

@@ -26,58 +26,6 @@ wait1Msec(100);
 
 task main()
 {
-	short Program;
-	short leftButton = 1;
-	short centerButton = 2;
-	short rightButton = 4;
-  int choice1;
-  int choice2;
-  bLCDBacklight = true;
-  while(1){
-  bool inMenu = true;
- 	while(inMenu)
-  {
-  	lcdClear();
-  	lcdWaitForBtnUp();
-  	lcd_printf("\tChoice 1\nBLU\tDiag\tRED");
-		lcdWaitForBtnDown();
-  	if (lcdIsBtnDown(leftButton))
-  	{
-  		choice1=0;
-  	}
-  	if (lcdIsBtnDown(rightButton))
-  	{
-  		choice1=1;
-  	}
-  	if (lcdIsBtnDown(centerButton))
-  	{
-  		diag();
-  		continue;
-  	}
-
-  	lcdClear();
-  	lcdWaitForBtnUp();
-		lcd_printf("\tChoice 2\n1\tBack\t2");
-		lcdWaitForBtnDown();
-    // Display menu 2
-  	if (lcdIsBtnDown(leftButton))
-  	{
-  		choice2=0;
-  	}
-  	if (lcdIsBtnDown(rightButton))
-  	{
-  		choice2=2;
-  	}
-  	if (lcdIsBtnDown(centerButton))
-  	{
-  		continue;
-  	}
-
-  	inMenu=false;
-	}
-	Program = choice1 + choice2;
-	lcdClear();
-	displayLCDCenteredString(0, Program==0?"BLU1":Program==1?"RED1":Program==2?"BLU2":"RED2");
-	lcdWaitForBtnUp();
-	lcdWaitForBtnDown();}
+	lcd_printf("tl\ttc\ttr\nbl\tbc\tbr");
+	while(1);
 }
