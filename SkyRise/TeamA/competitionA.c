@@ -23,26 +23,22 @@
 #pragma userControlDuration(120)
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
+#include "driveAPI.h"
+#include "auton.h"
 #include "lcdAPI.h"
 #include "diag.h"
-#include "driveAPI.h"
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                          Pre-Autonomous Functions
-//
-// You may want to perform some actions before the competition starts. Do them in the
-// following function.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
 int Program;
+
+////////////////////
+// PRE-AUTONOMOUS //
+////////////////////
+
 void pre_auton()
 {
   // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
   // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
   bStopTasksBetweenModes = true;
-
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
 
@@ -52,7 +48,8 @@ void pre_auton()
   int choice1;
   int choice2;
   bLCDBacklight = true;
- 	while(1)
+  bool inMenu = true;
+  while(inMenu)
   {
   	lcdClear();
   	char* c = "\tChoice 1\nBLU\tDiag\tRED";
@@ -60,11 +57,11 @@ void pre_auton()
 		int code = lcdWaitForBtnClick();
   	if (code==leftButton)
   	{
-  		choice1=0;
+  		choice1=0b00;
   	}
   	if (code==rightButton)
   	{
-  		choice1=1;
+  		choice1=0b01;
   	}
   	if (code==centerButton)
   	{
@@ -80,85 +77,83 @@ void pre_auton()
     // Display menu 2
   	if (code==leftButton)
   	{
-  		choice2=0;
+  		choice2=0b00;
   	}
   	if (code==rightButton)
   	{
-  		choice2=2;
+  		choice2=0b10;
   	}
   	if (code==centerButton)
   	{
   		continue;
   	}
-	Program = choice1 + choice2;
-	bool stillWaiting=true;
-	while(stillWaiting)
-	{
+		Program = choice1 + choice2;
+		while(1)
+		{
+			lcdClear();
+			switch (Program)
+			{
+				case 0:
+					lcd_printf("\tBLU Auto\nDiag\tOK\tBack");
+					break;
+				case 1:
+					lcd_printf("\tRED Auto\nDiag\tOK\tBack");
+					break;
+				case 2:
+					lcd_printf("\tBLU Pole\nDiag\tOK\tBack");
+					break;
+				case 3:
+					lcd_printf("\tRED Pole\nDiag\tOK\tBack");
+					break;
+			}
+			code = lcdWaitForBtnClick();
+			if(code==centerButton)
+			{
+				inMenu=false;
+				break;
+			}
+			else if (code==leftButton)
+				diag();
+			else
+				break;
+		} // while(1)
+	} // while(inMenu)
 	lcdClear();
-	switch (Program)
-	{
-		case 0:
-			lcd_printf("\tBLU Auto\nBack\tDiag\tBack");
-			break;
-		case 1:
-			lcd_printf("\tRED Auto\nBack\tDiag\tBack");
-			break;
-		case 2:
-			lcd_printf("\tBLU Pole\nBack\tDiag\tBack");
-			break;
-		case 3:
-			lcd_printf("\tRED Pole\nBack\tDiag\tBack");
-			break;
-	}
-	code = lcdWaitForBtnClick();
-	if(code==centerButton)
-		diag();
-	else
-		stillWaiting=false;
-	}
-}
+	char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
+	displayLCDCenteredString(0, disp);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 Autonomous Task
-//
-// This task is used to control your robot during the autonomous phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
+////////////////
+// AUTONOMOUS //
+////////////////
 
 task autonomous()
 {
   // .....................................................................................
   // Insert user code here.
   // .....................................................................................
-lcdClear();
-char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
-displayLCDCenteredString(0, disp);
-displayLCDCenteredString(1,"Running");
-setL(-127);
-	setR(-127);
-	wait1Msec(750);
-	setL(0);
-	setR(0);
-clawControl(80);
-	wait1Msec(500);
-	clawControl(-40);
+	lcdClear();
+	char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
+	displayLCDCenteredString(0, disp);
 
-	wait1Msec(1000);
-	clawControl(0);
+	switch(Program)
+	{
+		case 0:
+			autonBluAuto();
+		case 1:
+			autonRedAuto();
+		case 2:
+			autonBluPole();
+		case 3:
+			autonRedPole();
+	}
+
 	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 User Control Task
-//
-// This task is used to control your robot during the user control phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
+//////////////////
+// USER CONTROL //
+//////////////////
 
 task usercontrol()
 {
@@ -166,15 +161,17 @@ task usercontrol()
 	bool tension = false;
 	bool down_7u = false;
 	SensorValue[ime_lift] = 0;
-	bool lift_running = false;
-	while(1)
-	{
-		nMotorEncoder[claw] = 0;
+	char str[5];
+	char* strPtr = &str;
+	nMotorEncoder[claw] = 0;
 	SensorValue[ime_lift] = 0;
 	bool lift_running = false;
 	bool claw_running = false;
 	while(1)
 	{
+		memset(strPtr,0,5);
+		sprintf(strPtr,"%03d, %03d",vexRT[Ch2],vexRT[Ch3]);
+		writeDebugStreamLine(strPtr);
 		setR(vexRT[Ch2]);
 		setL(vexRT[Ch3]);
 		if(vexRT[Btn6U] && !vexRT[Btn6D])
@@ -225,5 +222,4 @@ task usercontrol()
 
 	}
 
-	}
 }

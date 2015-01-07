@@ -58,6 +58,7 @@ void lcd_printf(char* input)
 {
 	char strArr[50];
 	char* str = &strArr;
+	memset(str,0,50);
 	memcpy(str,input,strlen(input));
 	char line1[50];
 	char* line1Ptr=&line1;
@@ -73,12 +74,18 @@ void lcd_printf(char* input)
 	char* str2Ptr=&str2;
 	char str3[50];
 	char* str3Ptr=&str3;
+	memset(str1Ptr,0,50);
+	memset(str2Ptr,0,50);
+	memset(str3Ptr,0,50);
 	strtok(line1Ptr,str1Ptr,"\t");
 	strtok(line1Ptr,str2Ptr,"\t");
 	strtok(line1Ptr,str3Ptr,"\t");
 	displayLCDCenteredString(0, str2Ptr);
 	lcdPrintRight(0, str3Ptr);
 	lcdPrintLeft(0, str1Ptr);
+	memset(str1Ptr,0,50);
+	memset(str2Ptr,0,50);
+	memset(str3Ptr,0,50);
 	strtok(line2Ptr,str1Ptr,"\t");
 	strtok(line2Ptr,str2Ptr,"\t");
 	strtok(line2Ptr,str3Ptr,"\t");

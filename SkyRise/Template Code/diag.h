@@ -1,10 +1,8 @@
-#include "lcdAPI.h"
-
-void diag()
+int batstats()
 {
 string mainBattery, backupBattery;
-while(nLCDButtons!=0){}
-while(nLCDButtons!=2)                                       // An infinite loop to keep the program running until you terminate it
+lcdWaitForBtnUp();
+while(nLCDButtons==0)                                       // An infinite loop to keep the program running until you terminate it
 {
 clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
 clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
@@ -22,10 +20,22 @@ displayNextLCDString(backupBattery);
 //Short delay for the LCD refresh rate
 wait1Msec(100);
 }
+return nLCDButtons;
 }
 
-task main()
+void diag()
 {
-	lcd_printf("tl\ttc\ttr\nbl\tbc\tbr");
-	while(1);
+while(1)
+{
+	int screen=0;
+	int returnCode = 0;
+	switch (screen)
+	{
+		case 0:
+			returnCode=batstats();
+	}
+	lcdClear();
+	if(returnCode==2)
+		return;
+}
 }
