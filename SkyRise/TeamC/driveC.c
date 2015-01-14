@@ -56,11 +56,11 @@ task main()
 			lift(15);
 		}
 
-		if(vexRT[Btn8U] && !vexRT[Btn6D])
+		if(vexRT[Btn8U] && !vexRT[Btn8D])
 		{
 			openClaw(48);
 		}
-		else if(vexRT[Btn6D] && !vexRT[Btn6U])
+		else if(vexRT[Btn8D] && !vexRT[Btn8U])
 		{
 			openClaw(-48);
 		}
