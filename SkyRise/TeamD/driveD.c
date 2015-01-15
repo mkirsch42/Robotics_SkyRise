@@ -1,4 +1,5 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
+#pragma config(Sensor, dgtl1,  piston,         sensorDigitalOut)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_3,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
@@ -35,7 +36,7 @@ void lift(int speed, bool up = true)
 
 task main()
 {
-
+ int btnDown = 5;
 	while(1)
 	{
 		//Set the right motor to the speed of the channel 2 input
@@ -54,6 +55,17 @@ task main()
 		else
 		{
 			lift(3);
+		}
+
+		if(!vexRT[Btn8D] && btnDown<0)
+		{
+			btnDown = 5;
+			SensorValue[piston] = !SensorValue[piston];
+		}
+		else if (vexRT[Btn8D])
+		{
+			btnDown--;
+			wait1Msec(10);
 		}
 
 	}

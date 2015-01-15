@@ -121,5 +121,5 @@ int lcdWaitForBtnClick()
 
 bool lcdIsBtnDown(short btnCode)
 {
-	return nLCDButtons&btnCode;
+	return (bool)(nLCDButtons&btnCode);
 }
