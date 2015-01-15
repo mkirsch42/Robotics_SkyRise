@@ -94,9 +94,9 @@ void calibrateGyro()
 }
 
 task userDriveHolo() {
-  const TVexJoysticks kChY = Ch3; // y-axis joystick channel
-  const TVexJoysticks kChX = Ch4; // x-axis joystick channel
-  const TVexJoysticks kChR = Ch1; // rotation joystick channel
+  const TVexJoysticks kChX = Ch3; // x-axis joystick channel
+  const TVexJoysticks kChY = Ch4; // y-axis joystick channel
+  const TVexJoysticks kChR = Ch2; // rotation joystick channel
   const short kDelay = 25; // milliseconds for loop delay
   const ubyte kNumWheels = 4; // number of drive wheels
   const ubyte kNumMotorsPerWheel = 2; // max number of motors per wheel
@@ -179,8 +179,9 @@ task userDriveHolo() {
     }
     else
     {
-    	motor[rightGear] = 15;
-    	motor[leftGear] = 15;
+    	//Default Pressure
+    	motor[rightGear] = -15;
+    	motor[leftGear] = -15;
     }
 
     if(!vexRT[Btn8D] && btnDown==0)
