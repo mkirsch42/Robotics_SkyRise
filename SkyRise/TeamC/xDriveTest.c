@@ -14,67 +14,7 @@
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                          Pre-Autonomous Functions
-//
-// You may want to perform some actions before the competition starts. Do them in the
-// following function.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
 
-/*-----------------------------------------------------------------------------*/
-/*                                                                             */
-/*                        Copyright (c) Jordan Kiesel                          */
-/*                                   2014                                      */
-/*                            All Rights Reserved                              */
-/*                                                                             */
-/*-----------------------------------------------------------------------------*/
-/*                                                                             */
-/*    Module:     HolonomicDriveControl.c                                      */
-/*    Author:     Jordan Kiesel                                                */
-/*    Created:    10 Aug 2014                                                  */
-/*                                                                             */
-/*    Revisions:                                                               */
-/*                V1.00  10 Aug 2014 - Initial release                         */
-/*-----------------------------------------------------------------------------*/
-/*                                                                             */
-/*    The author is supplying this software for use with the VEX cortex        */
-/*    control system. This file can be freely distributed and teams are        */
-/*    authorized to freely use this program, however, it is requested that     */
-/*    improvements or additions be shared with the VEX community via the VEX   */
-/*    Forum. Please acknowledge the work of the authors when appropriate.      */
-/*    Thanks.                                                                  */
-/*                                                                             */
-/*    Licensed under the Apache License, Version 2.0 (the "License");          */
-/*    you may not use this file except in compliance with the License.         */
-/*    You may obtain a copy of the License at                                  */
-/*                                                                             */
-/*      http://www.apache.org/licenses/LICENSE-2.0                             */
-/*                                                                             */
-/*    Unless required by applicable law or agreed to in writing, software      */
-/*    distributed under the License is distributed on an "AS IS" BASIS,        */
-/*    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. */
-/*    See the License for the specific language governing permissions and      */
-/*    limitations under the License.                                           */
-/*                                                                             */
-/*    The author can be contacted on the VEX Forum as LegoMindstormsmaniac     */
-/*    email: legomindstormsmaniac@gmail.com                                    */
-/*    Member of VEXU team BNS, Bots 'n' Stuff Robotics, Princeton NJ.          */
-/*    Mentor for VRC team 24, Super Sonic Sparks, New Windsor MD.              */
-/*                                                                             */
-/*-----------------------------------------------------------------------------*/
-/*                                                                             */
-/*    Description:                                                             */
-/*                                                                             */
-/*    The userDriveHolo task is designed to control a holonomic drive and      */
-/*    utilizes a gyroscopic sensor to determine the direction to drive in      */
-/*    order to move in the direction the user pushes the joystick, regardless  */
-/*    of the robot's current orientation. Gyroscopic sensor values, joystick   */
-/*    values, and preset drive statistics are used to calculate the required   */
-/*    speed for each wheel in order to achieve the desired movement.           */
-/*                                                                             */
-/*-----------------------------------------------------------------------------*/
 
 const tSensors kGyroPort = in1; // gyroscopic sensor port/name
 
@@ -94,9 +34,9 @@ void calibrateGyro()
 }
 
 task userDriveHolo() {
-  const TVexJoysticks kChX = Ch3; // x-axis joystick channel
-  const TVexJoysticks kChY = Ch4; // y-axis joystick channel
-  const TVexJoysticks kChR = Ch2; // rotation joystick channel
+  const TVexJoysticks kChTranslate = Ch1; // Translation Control
+  const TVexJoysticks kChYaw = Ch4; //Rotating control
+  const TVexJoysticks kChFrwrd = Ch2; //Forward Movement
   const short kDelay = 25; // milliseconds for loop delay
   const ubyte kNumWheels = 4; // number of drive wheels
   const ubyte kNumMotorsPerWheel = 2; // max number of motors per wheel
@@ -113,43 +53,10 @@ task userDriveHolo() {
 	int btnDown = 5;
   while(true) {
     // ==== collect joystick & sensor values ====
-    x = vexRT[kChX]; // x component
-    y = vexRT[kChY]; // y component
-    r = vexRT[kChR]; // rotation
-    gyro = gyroOffset + (doUseGyro ? SensorValue[kGyroPort]/10.0 : 0.0); // if using gyro, scale its value to degrees
-
-    // ==== convert joystick values to polar ====
-    radius = sqrt(pow(x,2) + pow(y,2)); // r = sqrt(x^2 + y^2)
-    theta = atan2(y,x)*180.0/PI; // t = arctan(y/x) [converted from radians to degrees]
-
-    theta -= gyro; // adjust for gyro angle
-
-    // ==== calculate opposite-side speeds ====
-    a = (cosDegrees(theta + 90.0) + sinDegrees(theta + 90.0))*radius; // front-left and back-right
-    b = (cosDegrees(theta) + sinDegrees(theta))*radius; // front-right and back-left
-
-    // ==== set speeds, including rotation ====
-    wheelSpeed[0] = a + r; // front-left
-    wheelSpeed[1] = b - r; // front-right
-    wheelSpeed[2] = b + r; // back-left
-    wheelSpeed[3] = a - r; // back-right
-
-    // ==== normalize speeds ====
-    topSpeed = 0.0;
-    for(ubyte i=0; i<kNumWheels; i++)
-      if(abs(wheelSpeed[i]) > topSpeed)
-        topSpeed = abs(wheelSpeed[i]); // find highest desired speed
-    if(topSpeed > 127.0)
-      for(ubyte i=0; i<kNumWheels; i++)
-        wheelSpeed[i] /= topSpeed/127.0; // downscale all speeds so none are above 127
-
-    // ==== update motor powers ====
-    for(ubyte i=0; i<kNumWheels; i++) // cycle through all wheels
-      for(ubyte j=0; j<kNumMotorsPerWheel; j++) // cycle through all motors for each wheel
-        if(kMotorPort[i][j] != kNone) // check existence of motor
-          motor[kMotorPort[i][j]] = (word)wheelSpeed[i]; // update motor power
-
-
+    x = vexRT[kChTranslate]; // x component
+    y = vexRT[kChYaw]; // y component
+    r = vexRT[kChFrwrd]; // rotation
+    setXWheelMovement(x, y, r);
 
     if(vexRT[Btn6U] && !vexRT[Btn6D])
     {
@@ -201,40 +108,53 @@ task userDriveHolo() {
 
 void pre_auton()
 {
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
-  // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
   bStopTasksBetweenModes = true;
-
-	// All activities that occur before the competition starts
-	// Example: clearing encoders, setting servo positions, ...
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 Autonomous Task
-//
-// This task is used to control your robot during the autonomous phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
 
 task autonomous()
 {
-  // .....................................................................................
-  // Insert user code here.
-  // .....................................................................................
-
-	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
+   setXWheelMovement(0, 0, 1);
+   wait1Msec(1000);
+   setXWheelMovement(0, 0, -1);
+   wait1Msec(1000);
+   setXWheelMovement(0, 0, 0);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 User Control Task
-//
-// This task is used to control your robot during the user control phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
+void setXWheelMovement(int x, int y, int r)
+{
+	    gyro = gyroOffset + (doUseGyro ? SensorValue[kGyroPort]/10.0 : 0.0); // if using gyro, scale its value to degrees
+
+    // ==== convert joystick values to polar ====
+    radius = sqrt(pow(x,2) + pow(y,2)); // r = sqrt(x^2 + y^2)
+    theta = atan2(y,x)*180.0/PI; // t = arctan(y/x) [converted from radians to degrees]
+
+    theta -= gyro; // adjust for gyro angle
+
+    // ==== calculate opposite-side speeds ====
+    a = (cosDegrees(theta + 90.0) + sinDegrees(theta + 90.0))*radius; // front-left and back-right
+    b = (cosDegrees(theta) + sinDegrees(theta))*radius; // front-right and back-left
+
+    // ==== set speeds, including rotation ====
+    wheelSpeed[0] = a + r; // front-left
+    wheelSpeed[1] = b - r; // front-right
+    wheelSpeed[2] = b + r; // back-left
+    wheelSpeed[3] = a - r; // back-right
+
+    // ==== normalize speeds ====
+    topSpeed = 0.0;
+    for(ubyte i=0; i<kNumWheels; i++)
+      if(abs(wheelSpeed[i]) > topSpeed)
+        topSpeed = abs(wheelSpeed[i]); // find highest desired speed
+    if(topSpeed > 127.0)
+      for(ubyte i=0; i<kNumWheels; i++)
+        wheelSpeed[i] /= topSpeed/127.0; // downscale all speeds so none are above 127
+
+    // ==== update motor powers ====
+    for(ubyte i=0; i<kNumWheels; i++) // cycle through all wheels
+      for(ubyte j=0; j<kNumMotorsPerWheel; j++) // cycle through all motors for each wheel
+        if(kMotorPort[i][j] != kNone) // check existence of motor
+          motor[kMotorPort[i][j]] = (word)wheelSpeed[i]; // update motor power
+}
 
 task usercontrol()
 {
