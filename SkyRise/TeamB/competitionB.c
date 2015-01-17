@@ -20,117 +20,135 @@
 #pragma userControlDuration(120)
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
+#include "driveAPI.h"
+#include "auton.h"
+#include "lcdAPI.h"
+#include "diag.h"
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                          Pre-Autonomous Functions
-//
-// You may want to perform some actions before the competition starts. Do them in the
-// following function.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
+int Program;
 
-void setR(int speed)
-{
-	motor[right1] = motor[right2] = speed;
-}
-
-void setL(int speed)
-{
-	motor[left1] = motor[left2] = speed;
-}
-
-void lift(int speed, bool up = true)
-{
-		motor[lift1] = motor[lift2] = speed * (up?1:-1);
-}
-
-void liftSec(int speed, bool up = true)
-{
-	motor[lift3] = motor[lift4] = speed * (up?1:-1);
-}
-
-void clawControl(int speed, bool open)
-{
-	motor[claw] = speed * (open?1:-1);
-}
-
-void clawTiltControl(int speed, bool up)
-{
-	motor[clawTilt] = speed * (up?1:-1);
-}
+////////////////////
+// PRE-AUTONOMOUS //
+////////////////////
 
 void pre_auton()
 {
   // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
   // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
   bStopTasksBetweenModes = true;
-
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
+
+  short leftButton = 1;
+	short centerButton = 2;
+	short rightButton = 4;
+  int choice1;
+  int choice2;
+  Program = 0;
+  bLCDBacklight = true;
+  bool inMenu = nLCDButtons;
+  while(inMenu)
+  {
+  	lcdClear();
+  	char* c = "\tChoice 1\nBLU\tDiag\tRED";
+  	lcd_printf(c);
+		int code = lcdWaitForBtnClick();
+  	if (code==leftButton)
+  	{
+  		choice1=0b00;
+  	}
+  	if (code==rightButton)
+  	{
+  		choice1=0b01;
+  	}
+  	if (code==centerButton)
+  	{
+  		diag();
+  		lcdClear();
+  		c="\tChoice 1\nBLU\tDiag\tRED";
+  		continue;
+  	}
+
+  	lcdClear();
+		lcd_printf("\tChoice 2\nAuto\tBack\tPole");
+		code = lcdWaitForBtnClick();
+    // Display menu 2
+  	if (code==leftButton)
+  	{
+  		choice2=0b00;
+  	}
+  	if (code==rightButton)
+  	{
+  		choice2=0b10;
+  	}
+  	if (code==centerButton)
+  	{
+  		continue;
+  	}
+		Program = choice1 + choice2;
+		while(1)
+		{
+			lcdClear();
+			switch (Program)
+			{
+				case 0:
+					lcd_printf("\tBLU Auto\nDiag\tOK\tBack");
+					break;
+				case 1:
+					lcd_printf("\tRED Auto\nDiag\tOK\tBack");
+					break;
+				case 2:
+					lcd_printf("\tBLU Pole\nDiag\tOK\tBack");
+					break;
+				case 3:
+					lcd_printf("\tRED Pole\nDiag\tOK\tBack");
+					break;
+			}
+			code = lcdWaitForBtnClick();
+			if(code==centerButton)
+			{
+				inMenu=false;
+				break;
+			}
+			else if (code==leftButton)
+				diag();
+			else
+				break;
+		} // while(1)
+	} // while(inMenu)
+	//claw(false);
+	lcdClear();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 Autonomous Task
-//
-// This task is used to control your robot during the autonomous phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
+////////////////
+// AUTONOMOUS //
+////////////////
 
 task autonomous()
 {
   // .....................................................................................
   // Insert user code here.
   // .....................................................................................
+	lcdClear();
+	char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
+	displayLCDCenteredString(0, disp);
 
-	//Fwd
-	setL(-64);
-	setR(-64);
-	wait1Msec(250);
-	setL(0);
-	setR(0);
-	//Drop
-	clawTiltControl(64,false);
-	wait1Msec(200);
-	clawTiltControl(0,true);
-	//Push in
-	setL(64);
-	setR(64);
-	wait1Msec(750);
-	//Pull back
-	setL(-64);
-	setR(-64);
+	switch(Program)
+	{
+		case 0:
+			autonBluAuto();
+			break;
+		case 1:
+			autonRedAuto();
+			break;
+		case 2:
+			autonBluPole();
+			break;
+		case 3:
+			autonRedPole();
+			break;
+	}
 
-	wait1Msec(800);
-	//Turn out
-	setR(64);
-	wait1Msec(1250);
-	//Move out
-	setL(64);
-	wait1Msec(500);
-	//Open claw
-	clawControl(64,true);
-	wait1Msec(300);
-	clawControl(5,true);
-	//Turn back
-	setR(-64);
-	wait1Msec(1250);
-	//Go in
-	setR(64);
-	wait1Msec(700);
-	//Close claw
-	clawControl(64,false);
-	wait1MSec(300);
-	clawControl(0,true);
-	//Move back
-	setL(-64);
-	setR(-64);
-	wait1Msec(800);
-	//Stop
-	setR(0);
-	setL(0);
 	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
 }
 
