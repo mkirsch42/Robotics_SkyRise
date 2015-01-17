@@ -57,30 +57,45 @@ void calibrateGyro()
 	}
 }
 
-void setXDrive(word x, word y, word r) {
-	//X = Left Joystick 4
-	//Y = Right Joystick 1
-	//R = Right Joystick 2
+void setXDrive(word sideways, word rotate, word forward) {
+	//sideways = Left Joystick 4
+	//rotate = Right Joystick 1
+	//forward = Right Joystick 2
 	//127^2 = 16129
-  float gyro,radius,theta,a,b,wheelSpeed[kNumWheels],topSpeed;
+  float gyro,radius,theta,wheelSpeed[kNumWheels],topSpeed;
 
   	gyro = gyroOffset + (doUseGyro ? SensorValue[kGyroPort]/10.0 : 0.0); // if using gyro, scale its value to degrees
 
     // ==== convert joystick values to polar ====
-    radius = sqrt(pow(x,2) + pow(y,2)); // r = sqrt(x^2 + y^2)
-    theta = atan2(y,x)*180.0/PI; // t = arctan(y/x) [converted from radians to degrees]
+    radius = sqrt(pow(sideways,2) + pow(forward,2)); // forward = sqrt(sideways^2 + rotate^2)
+    theta = atan2(forward,sideways)*180.0/PI; // t = arctan(rotate/sideways) [converted from radians to degrees]
 
     theta -= gyro; // adjust for gyro angle
+    
+    start.getX() + len * Math.cos(Math.toRadians(dir))
+    start.getY() + len * Math.sin(Math.toRadians(dir))
 
     // ==== calculate opposite-side speeds ====
-    a = (cosDegrees(theta + 90.0) + sinDegrees(theta + 90.0))*radius; // front-left and back-right
-    b = (cosDegrees(theta) + sinDegrees(theta))*radius; // front-right and back-left
+    //float a,b;
+    //a = (cosDegrees(theta + 90.0) + sinDegrees(theta + 90.0))*radius; // front-left and back-right
+    //b = (cosDegrees(theta) + sinDegrees(theta))*radius; // front-right and back-left
+    
+    // ==== set speeds, including rotation ====
+    //wheelSpeed[0] = a + forward; // front-left
+    //wheelSpeed[1] = b - forward; // front-right
+    //wheelSpeed[2] = b + forward; // back-left
+    //wheelSpeed[3] = a - forward; // back-right
+
+
+    float x,y;
+    x = radius * cosDegrees(theta);
+    y = radius * sinDegrees(theta);
 
     // ==== set speeds, including rotation ====
-    wheelSpeed[0] = a + r; // front-left
-    wheelSpeed[1] = b - r; // front-right
-    wheelSpeed[2] = b + r; // back-left
-    wheelSpeed[3] = a - r; // back-right
+    wheelSpeed[0] = x + y + rotate; // front-left
+    wheelSpeed[1] = x - y - rotate; // front-right
+    wheelSpeed[2] = x - y + rotate; // back-left
+    wheelSpeed[3] = x + t - rotate; // back-right
 
 
     // ==== normalize speeds ====
