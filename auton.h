@@ -21,5 +21,5 @@ void autonRedAuto()
 
 void autonBluAuto()
 {
-	
+	setXDrive(0, 0, 0);
 }
