@@ -37,12 +37,12 @@ void pre_auton()
   // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
   // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
   bStopTasksBetweenModes = true;
-  // All activities that occur before the competition starts
-  // Example: clearing encoders, setting servo positions, ...
+	// All activities that occur before the competition starts
+	// Example: clearing encoders, setting servo positions, ...
 
   short leftButton = 1;
-  short centerButton = 2;
-  short rightButton = 4;
+	short centerButton = 2;
+	short rightButton = 4;
   int choice1;
   int choice2;
   bLCDBacklight = true;
@@ -165,9 +165,71 @@ task autonomous()
 task usercontrol()
 {
 	// User control code here, inside the loop
+	resetDriveIme();
+	SensorValue[ime_lift] = 0;
+	int btnDown = 5;
+	int btnDown2 = 5;
+	int btnDown3 = 5;
 	while(1)
 	{
-		
+		setR(vexRT[Ch2]);
+		setL(vexRT[Ch3]);
+
+		if(vexRT[Btn6U] && !vexRT[Btn6D])
+		{
+			lift(LIFT_SPEED, true);
+		}
+		else if(vexRT[Btn6D] && !vexRT[Btn6U])
+		{
+			lift(LIFT_SPEED, false);
+		}
+		else
+		{
+			lift(10, true);
+		}
+
+		if(!vexRT[Btn8D] && btnDown<0)
+		{
+			btnDown = 5;
+			SensorValue[piston] = !SensorValue[piston];
+		}
+		else if (vexRT[Btn8D])
+		{
+			btnDown--;
+			wait1Msec(10);
+		}
+
+		if(!vexRT[Btn8R] && btnDown2<0)
+		{
+			btnDown2 = 5;
+			driveMotors(-2,98,DRIVE_F);
+
+		}
+		else if (vexRT[Btn8R])
+		{
+			btnDown2--;
+			wait1Msec(10);
+		}
+
+		if(!vexRT[Btn7U] && btnDown3<0)
+		{
+			btnDown3 = 5;
+			liftDist(7,70,UP);
+		}
+		else if (vexRT[Btn7U])
+		{
+			btnDown3--;
+			wait1Msec(10);
+		}
+
+		if(vexRT[Btn7L])
+		{
+			motor[release]=80;
+		}
+		else
+		{
+			motor[release]=0;
+		}
 	}
 
 }
