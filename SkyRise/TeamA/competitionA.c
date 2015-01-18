@@ -3,6 +3,7 @@
 #pragma config(Sensor, I2C_1,  ime_left,       sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_2,  ime_right,      sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_3,  ime_lift,       sensorQuadEncoderOnI2CPort,    , AutoAssign)
+#pragma config(Motor,  port1,           release,       tmotorVex269, openLoop)
 #pragma config(Motor,  port2,           left1,         tmotorVex393HighSpeed, openLoop)
 #pragma config(Motor,  port3,           left2,         tmotorVex393HighSpeed, openLoop, encoder, encoderPort, I2C_1, 1000)
 #pragma config(Motor,  port4,           right1,        tmotorVex393HighSpeed, openLoop)
@@ -26,7 +27,6 @@
 #include "lcdAPI.h"
 #include "diag.h"
 
-int Program;
 
 ////////////////////
 // PRE-AUTONOMOUS //
@@ -34,76 +34,81 @@ int Program;
 
 void pre_auton()
 {
-	// Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
-	// Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
-	bStopTasksBetweenModes = true;
+  // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
+  // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
+  bStopTasksBetweenModes = true;
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
 
-	short leftButton = 1;
+  short leftButton = 1;
 	short centerButton = 2;
 	short rightButton = 4;
-	int choice1;
-	int choice2;
-	Program = 0;
-	bLCDBacklight = true;
-	bool inMenu = nLCDButtons;
-	while(inMenu)
-	{
-		lcdClear();
-		char* c = "\tChoice 1\nBLU\tDiag\tRED";
-		lcd_printf(c);
-		int code = lcdWaitForBtnClick();
-		if (code==leftButton)
-		{
-			choice1=0b00;
-		}
-		if (code==rightButton)
-		{
-			choice1=0b01;
-		}
-		if (code==centerButton)
-		{
-			diag();
-			lcdClear();
-			c="\tChoice 1\nBLU\tDiag\tRED";
-			continue;
-		}
+  int choice1;
+  int choice2;
+  bLCDBacklight = true;
 
-		lcdClear();
+  /* Press and hold any LCD button BEFORE turning on robot
+   * to enter autonomus selection mode.
+   * If LCD buttons are not pressed (or LCD is not plugged in)
+   * the default autonomous will run.
+   */
+  bool inMenu = nLCDButtons;
+  while(inMenu)
+  {
+  	lcdClear();
+  	char* c = "\tChoice 1\nBLU\tDiag\tRED";
+  	lcd_printf(c);
+		int code = lcdWaitForBtnClick();
+  	if (code==leftButton)
+  	{
+  		choice1=0b00;
+  	}
+  	if (code==rightButton)
+  	{
+  		choice1=0b01;
+  	}
+  	if (code==centerButton)
+  	{
+  		diag();
+  		lcdClear();
+  		c="\tChoice 1\nBLU\tDiag\tRED";
+  		continue;
+  	}
+
+  	lcdClear();
 		lcd_printf("\tChoice 2\nAuto\tBack\tPole");
 		code = lcdWaitForBtnClick();
-		// Display menu 2
-		if (code==leftButton)
-		{
-			choice2=0b00;
-		}
-		if (code==rightButton)
-		{
-			choice2=0b10;
-		}
-		if (code==centerButton)
-		{
-			continue;
-		}
+    // Display menu 2
+  	if (code==leftButton)
+  	{
+  		choice2=0b00;
+  	}
+  	if (code==rightButton)
+  	{
+  		choice2=0b10;
+  	}
+  	if (code==centerButton)
+  	{
+  		continue;
+  	}
 		Program = choice1 + choice2;
 		while(1)
 		{
 			lcdClear();
 			switch (Program)
 			{
-			case 0:
-				lcd_printf("\tBLU Auto\nDiag\tOK\tBack");
-				break;
-			case 1:
-				lcd_printf("\tRED Auto\nDiag\tOK\tBack");
-				break;
-			case 2:
-				lcd_printf("\tBLU Pole\nDiag\tOK\tBack");
-				break;
-			case 3:
-				lcd_printf("\tRED Pole\nDiag\tOK\tBack");
-				break;
+				case BLU_AUTO:
+					lcd_printf("\tBLU Auto\nDiag\tOK\tBack");
+					break;
+				case RED_AUTO:
+					lcd_printf("\tRED Auto\nDiag\tOK\tBack");
+					break;
+				case BLU_POLE:
+					lcd_printf("\tBLU Pole\nDiag\tOK\tBack");
+					break;
+				case RED_POLE:
+					lcd_printf("\tRED Pole\nDiag\tOK\tBack");
+					break;
 			}
 			code = lcdWaitForBtnClick();
 			if(code==centerButton)
@@ -127,27 +132,27 @@ void pre_auton()
 
 task autonomous()
 {
-	// .....................................................................................
-	// Insert user code here.
-	// .....................................................................................
+  // .....................................................................................
+  // Insert user code here.
+  // .....................................................................................
 	lcdClear();
-char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
+	char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":"RED Pole");
 	displayLCDCenteredString(0, disp);
 
 	switch(Program)
 	{
-	case 0:
-		autonBluAuto();
-		break;
-	case 1:
-		autonRedAuto();
-		break;
-	case 2:
-		autonBluPole();
-		break;
-	case 3:
-		autonRedPole();
-		break;
+		case BLU_AUTO:
+			autonBluAuto();
+			break;
+		case RED_AUTO:
+			autonRedAuto();
+			break;
+		case BLU_POLE:
+			autonBluPole();
+			break;
+		case RED_POLE:
+			autonRedPole();
+			break;
 	}
 
 	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
@@ -160,6 +165,7 @@ char* disp = (Program==0?"BLU Auto":Program==1?"RED Auto":Program==2?"BLU Pole":
 task usercontrol()
 {
 	// User control code here, inside the loop
+	resetDriveIme();
 	SensorValue[ime_lift] = 0;
 	int btnDown = 5;
 	int btnDown2 = 5;
@@ -214,6 +220,15 @@ task usercontrol()
 		{
 			btnDown3--;
 			wait1Msec(10);
+		}
+
+		if(vexRT[Btn7L])
+		{
+			motor[release]=80;
+		}
+		else
+		{
+			motor[release]=0;
 		}
 	}
 

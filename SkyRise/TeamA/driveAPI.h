@@ -28,12 +28,12 @@ void resetDriveIme()
 
 void setR(int speed)
 {
-	motor[right1] = motor[right2] = speed;
+	motor[right1] = motor[right2] = speed*0.91;
 }
 
 void setL(int speed)
 {
-	motor[left1] = motor[left2] = speed*0.9;
+	motor[left1] = motor[left2] = speed;
 }
 
 void fwd(int speed)
@@ -120,5 +120,47 @@ void liftDist(float dist, int speed, bool up)
 
 void claw(bool open)
 {
-	SensorValue[piston] = open;
+	SensorValue[piston] = !open;
+}
+
+
+const int driveMotors_ = 0;
+const int turn_ = 1;
+const int pointTurn_ = 2;
+const int liftDist_ = 3;
+
+int RUN_;
+float DIST_;
+int SPEED_;
+int DIR_;
+bool isThreadDone;
+
+task runThread()
+{
+	isThreadDone=false;
+	switch(RUN_)
+	{
+		case driveMotors_:
+			driveMotors(DIST_, SPEED_, DIR_);
+			break;
+		case turn_:
+			turn(DIST_, SPEED_, DIR_);
+			break;
+		case pointTurn_:
+			pointTurn(DIST_, SPEED_, DIR_);
+			break;
+		case liftDist_:
+			liftDist(DIST_, SPEED_, DIR_);
+			break;
+	}
+	isThreadDone=true;
+}
+
+void driveInThread(int run, float dist, int speed, int dir)
+{
+	RUN_ = run;
+	DIST_ = dist;
+	SPEED_ = speed;
+	DIR_ = dir;
+	StartTask(runThread);
 }

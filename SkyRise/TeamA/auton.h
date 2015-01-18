@@ -1,86 +1,71 @@
+const int BLU_AUTO=0;
+const int RED_AUTO=1;
+const int BLU_POLE=2;
+const int RED_POLE=3;
+int Program=0;
+
 void autonRedPole()
 {
-	resetDriveIme();
-	driveMotors(24, 70, DRIVE_F);
+
 }
 
 void autonBluPole()
 {
-	pointTurn(90, 70, DRIVE_L);
-	/*setL(-127);
-	setR(-127);
-	wait1Msec(750);
-	setL(0);
-	setR(0);
-	clawControl(80);
-	wait1Msec(500);
-	clawControl(-40);
 
-	wait1Msec(1000);
-	clawControl(0);*/
 }
 
 void autonRedAuto()
 {
-	/*setL(-127);
-	setR(-127);
-	wait1Msec(750);
-	setL(0);
-	setR(0);
-	clawControl(80);
+	// SETUP
+	liftDist(7, 90, UP);
+	claw(true);
+	motor[release]=127;
 	wait1Msec(500);
-	clawControl(-40);
+	motor[release]=0;
 
+	// GRAB SKYRISE
+	claw(false);
+	wait1Msec(100);
+	liftDist(7.5, 90, UP);
+	wait1Msec(100);
+
+	// SCORE SKYRISE
+	driveInThread(pointTurn_, 85, 50, Program?DRIVE_R:DRIVE_L);
 	wait1Msec(1000);
-	clawControl(0);*/
+	liftDist(9,90,DOWN);
+	while(!isThreadDone){}
+	driveMotors(-1, 60);
+	claw(true);
+	wait1Msec(100);
+
+	// RESET
+	driveInThread(liftDist_, 14, 127, UP);
+	pointTurn(82.5, 45, Program?DRIVE_L:DRIVE_R);
+	while(!isThreadDone){}
+	wait1Msec(100);
+	liftDist(14, 90, DOWN);
+	wait1Msec(100);
+	driveMotors(1.5, 60);
+
+	// GRAB SKYRISE
+	claw(false);
+	wait1Msec(100);
+	liftDist(7.5, 90, UP);
+	wait1Msec(100);
+
+	// SCORE SKYRISE
+	pointTurn(85,45,Program?DRIVE_R:DRIVE_L);
+	wait1Msec(100);
+	claw(true);
+
+	// FINISH
+	liftDist(3, 127, UP);
+	pointTurn(90, 127, Program?DRIVE_L:DRIVE_R);
+	wait1Msec(500);
+	driveInThread(liftDist_, 8, 127, DOWN);
 }
 
 void autonBluAuto()
 {
-	// SETUP
-	//liftDist(7, 70, UP);
-	//claw(true);
-	//wait1Msec(1000);
-
-	// GRAB SKYRISE
-	claw(false);
-	wait1Msec(50);
-	liftDist(6, 70, UP);
-
-	// SCORE SKYRISE
-	pointTurn(90,45,DRIVE_R);
-	wait1Msec(100);
-	liftDist(4,60,DOWN);
-	claw(true);
-
-	// CUBE SETUP
-	driveMotors(-3, 50);
-	wait1Msec(100);
-	pointTurn(150,50,DRIVE_R);
-	wait1Msec(100);
-	driveMotors(-5, 50);
-	liftDist(9, 70, DOWN);
-	claw(false);
-
-	// GRAB CUBE
-	driveMotors(14, 60);
-	claw(true);
-	liftDist(20, 70, UP);
-	wait1Msec(100);
-	driveMotors(-9, 60);
-
-	// PLACE CUBE
-	pointTurn(150, 50, DRIVE_L);
-	driveMotors(9, 50);
-	liftDist(9, 70, DOWN);
-
-	// RELEASE CUBE
-	claw(false);
-	driveMotors(-9, 60);
-
-	// FINISH
-	setL(60);
-	wait1Msec(2000);
-	setL(0);
-	claw(true);
+	autonRedAuto();
 }
