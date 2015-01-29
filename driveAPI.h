@@ -16,11 +16,18 @@ const ubyte kNumWheels = 4; // number of drive wheels
 const ubyte kNumMotorsPerWheel = 2; // max number of motors per wheel
 const tMotor kNone = -1; // used for indicating the lack of an additional motor
 const tMotor kMotorPort[kNumWheels][kNumMotorsPerWheel] = { // drive motor ports/names
+    {port3, kNone}, // front-left
+    {port2, kNone}, // front-right
+    {port4, kNone}, // back-left
+    {port5, kNone}  // back-right
+};
+/*
+const tMotor kMotorPort[kNumWheels][kNumMotorsPerWheel] = { // drive motor ports/names
     {port2, kNone}, // front-left
     {port3, kNone}, // front-right
     {port4, kNone}, // back-left
     {port5, kNone}  // back-right
-};
+};*/
 
 void calibrateGyro()
 {
@@ -53,15 +60,12 @@ void setXDrive(word sideways, word rotate, word forward) {
     theta = atan2(forward,sideways)*180.0/PI; // t = arctan(rotate/sideways) [converted from radians to degrees]
 
     theta -= gyro; // adjust for gyro angle
-    
-    start.getX() + len * Math.cos(Math.toRadians(dir))
-    start.getY() + len * Math.sin(Math.toRadians(dir))
 
     // ==== calculate opposite-side speeds ====
     //float a,b;
     //a = (cosDegrees(theta + 90.0) + sinDegrees(theta + 90.0))*radius; // front-left and back-right
     //b = (cosDegrees(theta) + sinDegrees(theta))*radius; // front-right and back-left
-    
+
     // ==== set speeds, including rotation ====
     //wheelSpeed[0] = a + forward; // front-left
     //wheelSpeed[1] = b - forward; // front-right
