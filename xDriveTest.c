@@ -18,13 +18,11 @@
 
 const bool doUseGyro = false; // enable gyroscopic sensor
 bool isGyroCalibrated = false;
-float gyroOffset = 90.0; // degrees CCW from +x axis robot faces at gyro=0
 
 //DPI
 bool isSlowActive = false; //Is slow mode active
 float multiplierSlow = 0.3;
 byte debounceSlow = 0; //Debouncer for it (If 0 can switch)
-bool isAutoRunning = false;
 
 //XDrive Settings
 const TVexJoysticks kChTranslate = Ch1; // Translation Control
@@ -58,45 +56,23 @@ void calibrateGyro()
 	}
 }
 
-void setXDrive(word sideways, word rotate, word forward) {
-	//sideways = Left Joystick 4
-	//rotate = Right Joystick 1
-	//forward = Right Joystick 2
-	//127^2 = 16129
-  float gyro,radius,theta,wheelSpeed[kNumWheels],topSpeed;
-
-  	//gyro = gyroOffset + (doUseGyro ? SensorValue[kGyroPort]/10.0 : 0.0); // if using gyro, scale its value to degrees
-
-    // ==== convert joystick values to polar ====
-    radius = sqrt(pow(sideways,2) + pow(forward,2)); // forward = sqrt(sideways^2 + rotate^2)
-    theta = atan2(forward,sideways)*180.0/PI; // t = arctan(rotate/sideways) [converted from radians to degrees]
-
-    //theta -= gyro; // adjust for gyro angle
-
-    //start.getX() + len * Math.cos(Math.toRadians(dir))
-    //start.getY() + len * Math.sin(Math.toRadians(dir))
-
-    // ==== calculate opposite-side speeds ====
-    //float a,b;
-    //a = (cosDegrees(theta + 90.0) + sinDegrees(theta + 90.0))*radius; // front-left and back-right
-    //b = (cosDegrees(theta) + sinDegrees(theta))*radius; // front-right and back-left
-
-    // ==== set speeds, including rotation ====
-    //wheelSpeed[0] = a + forward; // front-left
-    //wheelSpeed[1] = b - forward; // front-right
-    //wheelSpeed[2] = b + forward; // back-left
-    //wheelSpeed[3] = a - forward; // back-right
-
+void setXDrive(word yaw, word forward, word strafe) {
+	//yaw = Left Joystick 4
+	//forward = Right Joystick 1
+	//strafe = Right Joystick 2
+  float radius,theta,wheelSpeed[kNumWheels],topSpeed;
+    radius = sqrt(pow(yaw,2) + pow(strafe,2)); // forward = sqrt(sideways^2 + rotate^2)
+    theta = atan2(strafe,yaw)*180.0/PI; // t = arctan(rotate/sideways) [converted from radians to degrees]
 
     float x,y;
     x = radius * cosDegrees(theta);
     y = radius * sinDegrees(theta);
 
     // ==== set speeds, including rotation ====
-    wheelSpeed[0] = x + y + rotate; // front-left
-    wheelSpeed[1] = x - y - rotate; // front-right
-    wheelSpeed[2] = x - y + rotate; // back-left
-    wheelSpeed[3] = x + y - rotate; // back-right
+    wheelSpeed[0] = x + y + forward; // front-left
+    wheelSpeed[1] = x - y - forward; // front-right
+    wheelSpeed[2] = x - y + forward; // back-left
+    wheelSpeed[3] = x + y - forward; // back-right
 
 
     // ==== normalize speeds ====
@@ -118,7 +94,7 @@ void setXDrive(word sideways, word rotate, word forward) {
 
 task userDriveHolo() {
   word x,y,r;
-	int btnDown = 5;
+	int btnDown = 2;
   while(true) {
     // ==== collect joystick & sensor values ====
     x = vexRT[kChYaw]* (isSlowActive ? multiplierSlow : 1); // x component
@@ -126,11 +102,6 @@ task userDriveHolo() {
     r = -vexRT[kChTranslate]* (isSlowActive ? multiplierSlow : 1); //Rotation componenet
 
     setXDrive(x, y, r);
-
-    if (!isAutoRunning && vexRT(Btn7U)) {
-			isAutoRunning = true;
-			StartTask(autonomous);
-    }
 
     //Main Lift
     if(vexRT[Btn6U] && !vexRT[Btn6D])
@@ -157,8 +128,8 @@ task userDriveHolo() {
     }
     else if(!vexRT[Btn5D] && vexRT[Btn5U])
     {
-    	motor[rightGear] = -96 *(isSlowActive ? multiplierSlow : 1);
-    	motor[leftGear] = -96 *(isSlowActive ? multiplierSlow : 1);
+    	motor[rightGear] = -96 *(isSlowActive ? multiplierSlow *2 : 1);
+    	motor[leftGear] = -96 *(isSlowActive ? multiplierSlow *2 : 1);
     }
     else
     {
@@ -168,11 +139,11 @@ task userDriveHolo() {
     }
 
     //Slow mode
-    if (vexRT[Btn8L] && debounceSlow == 0) {
-    	debounceSlow = 5;
+    if (!vexRT[Btn8L] && debounceSlow == 0) {
+    	debounceSlow = 2;
     	isSlowActive = !isSlowActive;
     }
-    else if (debounceSlow > 0) {
+    else if (vexRT[Btn8L] && debounceSlow > 0) {
   			debounceSlow--;
   	}
 
@@ -180,7 +151,7 @@ task userDriveHolo() {
     //Piston Claw
     if(!vexRT[Btn8D] && btnDown==0)
     {
-    	btnDown=5;
+    	btnDown=2;
     	SensorValue[piston]=!SensorValue[piston];
     }
     else if(vexRT[Btn8D] && btnDown>0)
@@ -201,21 +172,28 @@ void pre_auton()
 
 task autonomous()
 {
-    	motor[rightGear] = -96;
-    	motor[leftGear] = -96;
+	motor[leftGear] = -15;
+	motor[rightGear] = -15;
+    	motor[eleRight] = 96;
+    	motor[eleLeft] = 96;
     	wait10Msec(100);
-    	motor[rightGear] = -15;
-    	motor[leftGear] = -15;
+    	motor[eleRight] = 15;
+    	motor[eleLeft] = 15;
     	wait10Msec(10);
     	//P1 = Rotate
 	//P2 = Forward Motion
   //P3 = Sideways Motion
-   setXDrive(0, -127, 0);
-   wait10Msec(100);
+   setXDrive(0, 127, 127);
+   wait10Msec(70);
+   setXDrive(0, -127, -127);
+   wait10Msec(40);
    setXDrive(0, 127, 0);
-   wait10Msec(100);
-   setXDrive(0, 0, 0);
-   isAutoRunning = false;
+   wait10Msec(25);
+   setXDrive(0, -127, 0);
+   wait10Msec(25);
+   setXDrive(127,-5,0);
+   wait1Msec(50);
+   setXDrive(0,0,0);
 }
 
 
@@ -228,114 +206,3 @@ task usercontrol()
   while(true)
     wait1Msec(100);
 }
-/*
-task usercontrol()
-{
-	clearTimer(T1);
-	while (true)
-	{
-		rotValueSquares = SensorValue[rotSensor]/rotToSquaresRatio;
-
-		//pneumatic claw
-		if(vexRT[Btn8D] == 1 && time1[T1] > 500)
-		{
-			if(SensorValue[claw] == 1)
-				SensorValue[claw] = 0;
-			else
-				SensorValue[claw] = 1;
-			clearTimer(T1);
-		}
-		else {}
-		//not claw pneumatic
-		//not claw is actually the claw, claw is the not claw
-		//changed the sensors to the correct slots - jason
-		//pneumatic for not claw just releases the gas or closes the gas, no lift action
-
-		if(vexRT[Btn7D] == 1 && time1[T1] > 500)
-		{
-			if(SensorValue[notClaw] == 1)
-				SensorValue[notClaw] = 0;
-			else
-				SensorValue[notClaw] = 1;
-			clearTimer(T1);
-		}
-		else {}
-		//-----------------
-		if(vexRT[Btn7R] != 1 && vexRT[Btn7L] != 1)
-		{
-			motor[frontRight] = -vexRT[Ch2];
-			motor[backRight] =  -vexRT[Ch2];
-			motor[frontLeft] = vexRT[Ch3];
-			motor[backLeft] =  vexRT[Ch3];
-		}
-		else if(vexRT[Btn7R] == 1)
-		{
-			strafeRight(90);
-		}
-		else if(vexRT[Btn7L] == 1)
-		{
-			strafeLeft(90);
-		}
-		//	if(vexRT[Btn8U] == 1)
-		//	{
-		//		drive(90);
-		//	}
-		//		else if(vexRT[Btn8D] == 1)
-		//		{
-		//			drive(-90);
-		//		}
-		//		if(vexRT[Btn8R] == 1)
-		//		{
-		//	driveLeftSide(110);
-		/*		driveRightSide(110);
-		}
-		else if(vexRT[Btn8L] == 1)
-		{
-		driveLeftSide(-110);
-		driveRightSide(-110);
-		}
-		else
-		{}
-		*/	//----------------------------------------
-/*
-		if(vexRT[Btn6D] == 1)
-		{
-			motor[liftLeftBottom] = -127;
-			motor[liftRightMid] = 127;
-			motor[liftRightTop] = 127;
-			motor[liftRightBottom] = 127;
-			motor[liftLeftTop] = -127;
-		}
-		else if(vexRT[Btn6U] == 1)
-		{
-			motor[liftLeftBottom] = 127;
-			motor[liftRightMid] = -127;
-			motor[liftRightTop] = -127;
-			motor[liftRightBottom] = -127;
-			motor[liftLeftTop] = 127;
-		}
-		else
-		{
-			motor[liftLeftBottom] = 0;
-			motor[liftRightMid] = 0;
-			motor[liftRightTop] = 0;
-			motor[liftRightBottom] = 0;
-			motor[liftLeftTop] = 0;
-		}
-		//Convayer control ---------------------
-		if(vexRT[Btn5U] == 1)
-		{
-			motor[con] = 127;
-		}
-		else if(vexRT[Btn5D] == 1)
-		{
-			motor[con] = -127;
-		}
-		else
-		{
-			motor[con] = 0;
-
-		}
-
-	}
-}*/
