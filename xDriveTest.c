@@ -1,5 +1,6 @@
-#pragma config(Sensor, in1,    kGyroPort,    sensorGyro)
-#pragma config(Sensor, dgtl1,  piston,         sensorDigitalOut)
+#pragma config(Sensor, in1,    kGyroPort,      sensorGyro)
+#pragma config(Sensor, dgtl9,  piston,         sensorDigitalOut)
+#pragma config(Sensor, dgtl1,  LED1,           sensorLEDtoVCC)
 #pragma config(Motor,  port6,           leftGear,      tmotorVex393, openLoop)
 #pragma config(Motor,  port7,           rightGear,     tmotorVex393, openLoop)
 #pragma config(Motor,  port8,           eleLeft,       tmotorVex393, openLoop)
@@ -15,6 +16,7 @@
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
+bool isAutonomousModeRunning = false;
 
 const bool doUseGyro = false; // enable gyroscopic sensor
 bool isGyroCalibrated = false;
@@ -96,6 +98,14 @@ task userDriveHolo() {
   word x,y,r;
 	int btnDown = 2;
   while(true) {
+  	if (isAutonomousModeRunning) {
+  		continue;
+  	}
+  	if (vexRT[Btn7U]) {
+  		isAutonomousModeRunning = true;
+  		StartTask(autonomous);
+  	}
+
     // ==== collect joystick & sensor values ====
     x = vexRT[kChYaw]* (isSlowActive ? multiplierSlow : 1); // x component
     y = vexRT[kChFrwrd]* (isSlowActive ? multiplierSlow : 1); // y component
@@ -146,7 +156,7 @@ task userDriveHolo() {
     else if (vexRT[Btn8L] && debounceSlow > 0) {
   			debounceSlow--;
   	}
-
+  	SensorValue[LED1] = isSlowActive;
 
     //Piston Claw
     if(!vexRT[Btn8D] && btnDown==0)
@@ -185,15 +195,16 @@ task autonomous()
   //P3 = Sideways Motion
    setXDrive(0, 127, 127);
    wait10Msec(70);
-   setXDrive(0, -127, -127);
-   wait10Msec(40);
+   setXDrive(0, -127, 0);
+   wait10Msec(50);
    setXDrive(0, 127, 0);
    wait10Msec(25);
    setXDrive(0, -127, 0);
    wait10Msec(25);
    setXDrive(127,-5,0);
-   wait1Msec(50);
+   wait10Msec(30);
    setXDrive(0,0,0);
+   isAutonomousModeRunning = false;
 }
 
 
