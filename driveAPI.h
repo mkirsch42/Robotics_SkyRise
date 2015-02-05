@@ -1,4 +1,7 @@
-const int LIFT_SPEED = 96;
+int LIFT_SPEED = 96;
+bool dpi = true;
+const int LIFT_SPEED_HIGH = 96;
+const int LIFT_SPEED_LOW = 70;
 const bool UP = 1;
 const bool DOWN = 0;
 const float LIFT_IN_PER_ROT = 7.25;

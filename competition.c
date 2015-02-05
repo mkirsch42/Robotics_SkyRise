@@ -1,5 +1,6 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, dgtl1,  piston,         sensorDigitalOut)
+#pragma config(Sensor, dgtl12, override,       sensorDigitalIn)
 #pragma config(Sensor, I2C_1,  ime_left,       sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_2,  ime_right,      sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_3,  ime_lift,       sensorQuadEncoderOnI2CPort,    , AutoAssign)
@@ -52,7 +53,11 @@ void pre_auton()
    * If LCD buttons are not pressed (or LCD is not plugged in)
    * the default autonomous will run.
    */
-  bool inMenu = nLCDButtons;
+  bool inMenu = nLCDButtons | SensorValue[override];
+  if(inMenu)
+  {
+  	writeDebugStreamLine("GOING INTO MENU");
+	}
   while(inMenu)
   {
   	lcdClear();
@@ -165,11 +170,18 @@ task autonomous()
 task usercontrol()
 {
 	// User control code here, inside the loop
+
+	/*
+	 * 7R: Low lift speed
+	 * 7L: Claw release motor
+	 * 8D: Toggle claw
+	 * 8R: Jerk robot backwards
+	 * 6U/D: Lift Control
+	 */
 	resetDriveIme();
 	SensorValue[ime_lift] = 0;
 	int btnDown = 5;
 	int btnDown2 = 5;
-	int btnDown3 = 5;
 	while(1)
 	{
 		setR(vexRT[Ch2]);
@@ -185,7 +197,7 @@ task usercontrol()
 		}
 		else
 		{
-			lift(10, true);
+			lift(14, true);
 		}
 
 		if(!vexRT[Btn8D] && btnDown<0)
@@ -211,15 +223,13 @@ task usercontrol()
 			wait1Msec(10);
 		}
 
-		if(!vexRT[Btn7U] && btnDown3<0)
+		if(vexRT[Btn7R])
 		{
-			btnDown3 = 5;
-			liftDist(7,70,UP);
+			LIFT_SPEED = LIFT_SPEED_LOW;
 		}
-		else if (vexRT[Btn7U])
+		else
 		{
-			btnDown3--;
-			wait1Msec(10);
+			LIFT_SPEED = LIFT_SPEED_HIGH;
 		}
 
 		if(vexRT[Btn7L])
