@@ -33,31 +33,35 @@ void autonBluPole()
 void autonRedAuto()
 {
 	// SETUP
-	liftDist(7, 90, UP);
+	//driveInThread(driveMotors_, -.75, 80, DRIVE_F);
 	claw(true);
+	liftDist(5.5, 98, UP);
+	//while(!isThreadDone){}
 	motor[release]=127;
 	wait1Msec(250);
 	motor[release]=0;
+	driveMotors(1, 98);
+	driveMotors(-1, 98);
 
 	// GRAB SKYRISE
 	claw(false);
 	//driveInThread(driveMotors_, -1, 65, DRIVE_F);
 	wait1Msec(100);
-	liftDist(7.5, 90, UP);
+	liftDist(7.5, 127, UP);
 	wait1Msec(100);
 	//while(!isThreadDone){}
 
 	// SCORE SKYRISE
-	driveInThread(pointTurn_, 85, 65, Program?DRIVE_L:DRIVE_R);
+	driveInThread(pointTurn_, 85, 75, Program?DRIVE_L:DRIVE_R);
 	wait1Msec(1000);
-	liftDist(9,65,DOWN);
+	liftDist(8,65,DOWN);
 	while(!isThreadDone){}
 	driveMotors(-1, 60);
 	claw(true);
 	wait1Msec(100);
 
 	// RESET
-	driveInThread(liftDist_, 14, 127, UP);
+	driveInThread(liftDist_, 13, 127, UP);
 	pointTurn(82.5, 45, Program?DRIVE_R:DRIVE_L);
 	while(!isThreadDone){}
 	wait1Msec(100);
