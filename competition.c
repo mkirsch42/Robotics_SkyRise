@@ -53,11 +53,7 @@ void pre_auton()
    * If LCD buttons are not pressed (or LCD is not plugged in)
    * the default autonomous will run.
    */
-  bool inMenu = nLCDButtons | SensorValue[override];
-  if(inMenu)
-  {
-  	writeDebugStreamLine("GOING INTO MENU");
-	}
+  bool inMenu = nLCDButtons;
   while(inMenu)
   {
   	lcdClear();

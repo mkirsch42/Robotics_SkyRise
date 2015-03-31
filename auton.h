@@ -34,50 +34,52 @@ void autonRedAuto()
 {
 	// SETUP
 	//driveInThread(driveMotors_, -.75, 80, DRIVE_F);
-	claw(true);
-	liftDist(5.5, 98, UP);
-	//while(!isThreadDone){}
 	motor[release]=127;
+	claw(true);
+	liftDist(5.5, 127, UP);
+	//while(!isThreadDone){}
 	wait1Msec(250);
 	motor[release]=0;
-	driveMotors(1, 98);
-	driveMotors(-1, 98);
+	//driveMotors(1, 98);
 
 	// GRAB SKYRISE
 	claw(false);
 	//driveInThread(driveMotors_, -1, 65, DRIVE_F);
 	wait1Msec(100);
-	liftDist(7.5, 127, UP);
+	liftDist(10, 127, UP);
 	wait1Msec(100);
 	//while(!isThreadDone){}
 
 	// SCORE SKYRISE
 	driveInThread(pointTurn_, 85, 75, Program?DRIVE_L:DRIVE_R);
 	wait1Msec(1000);
-	liftDist(8,65,DOWN);
+	liftDist(11,65,DOWN);
 	while(!isThreadDone){}
-	driveMotors(-1, 60);
+	driveMotors(-2,98);
+	//driveMotors(-1, 60);
 	claw(true);
+	driveMotors(2,98);
 	wait1Msec(100);
 
 	// RESET
 	driveInThread(liftDist_, 13, 127, UP);
-	pointTurn(82.5, 45, Program?DRIVE_R:DRIVE_L);
+	pointTurn(85, 45, Program?DRIVE_R:DRIVE_L);
 	while(!isThreadDone){}
 	wait1Msec(100);
 	//driveMotors(1, 60, DRIVE_F);
-	liftDist(9, 90, DOWN);
+	driveMotors(-2, 60);
+	liftDist(10, 90, DOWN);
+	driveMotors(2, 60);
 	wait1Msec(100);
-	driveMotors(1, 60);
 
 	// GRAB SKYRISE
 	claw(false);
 	wait1Msec(100);
-	liftDist(7.5, 90, UP);
+	liftDist(11, 90, UP);
 	wait1Msec(100);
 
 	// SCORE SKYRISE
-	pointTurn(85,45,Program?DRIVE_L:DRIVE_R);
+	pointTurn(85,55,Program?DRIVE_L:DRIVE_R);
 	wait1Msec(100);
 	claw(true);
 
