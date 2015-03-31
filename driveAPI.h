@@ -81,7 +81,7 @@ void setXDrive(word sideways, word rotate, word forward) {
     wheelSpeed[0] = x + y + rotate; // front-left
     wheelSpeed[1] = x - y - rotate; // front-right
     wheelSpeed[2] = x - y + rotate; // back-left
-    wheelSpeed[3] = x + t - rotate; // back-right
+    wheelSpeed[3] = x + y - rotate; // back-right
 
 
     // ==== normalize speeds ====
